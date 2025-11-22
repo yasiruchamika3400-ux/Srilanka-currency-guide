@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sri Lanka Currency Visual Guide</title>
+    <!-- Tailwind CSS is loaded from a free, public CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font is loaded from Google Fonts, which is free -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* Color variables based on official currency colors (used for placeholders) */
+        :root {
+            --color-lkr-5000: #e7c050; /* Gold */
+            --color-lkr-1000: #10b981; /* Green */
+            --color-lkr-500: #8b5cf6;  /* Purple */
+            --color-lkr-100: #fb923c;  /* Orange */
+            --color-lkr-50: #3b82f6;   /* Blue */
+            --color-lkr-20: #b91c1c;   /* Maroon */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Style for the Blind Recognition dots */
+        .blind-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #1f2937;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        /* Visual feedback for cards */
+        .currency-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .currency-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* Custom size ratios for notes (visual hint that higher values are larger) */
+        .w-note-5000 { width: 100%; max-width: 500px; }
+        .w-note-1000 { width: 96%; max-width: 480px; }
+        .w-note-500 { width: 92%; max-width: 460px; }
+        .w-note-100 { width: 88%; max-width: 440px; }
+        .w-note-50 { width: 84%; max-width: 420px; }
+        .w-note-20 { width: 80%; max-width: 400px; }
+        .h-note { height: 67px; } /* Consistent height */
+        
+        /* Base styles for the detailed SVG containers */
+        .note-svg-container {
+            height: 90px; /* Increased height for better visual detail */
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Small note representation for the breakdown calculator */
+        .small-note-box {
+            height: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: all 0.1s ease;
+        }
+
+        /* Note Colors for Breakdown Box */
+        .box-5000 { background: linear-gradient(135deg, var(--color-lkr-5000), #a38936); width: 60px;}
+        .box-1000 { background: linear-gradient(135deg, var(--color-lkr-1000), #065f46); width: 58px;}
+        .box-500 { background: linear-gradient(135deg, var(--color-lkr-500), #5b21b6); width: 56px;}
+        .box-100 { background: linear-gradient(135deg, var(--color-lkr-100), #9a3412); width: 54px;}
+        .box-50 { background: linear-gradient(135deg, var(--color-lkr-50), #1e40af); width: 52px;}
+        .box-20 { background: linear-gradient(135deg, var(--color-lkr-20), #922b2b); width: 50px;}
+
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">LKR Currency Visual Guide</h1>
+            <p class="text-xl text-gray-500">Quick identification and breakdown for visitors to Sri Lanka.</p>
+        </header>
+
+        <!-- DENOMINATION BREAKDOWN CALCULATOR -->
+        <section class="bg-indigo-50 p-6 md:p-8 rounded-xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold text-indigo-800 mb-4">Currency Breakdown Calculator</h2>
+            <p class="text-gray-600 mb-4">Enter an amount (must be divisible by 20) to see all possible banknote combinations (Rs. 5000 to Rs. 20).</p>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-6 items-end">
+                <div class="flex-1 w-full">
+                    <label for="lkrAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount in Sri Lankan Rupees (LKR)</label>
+                    <input type="number" id="lkrAmount" placeholder="e.g., 6570" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-lg" value="500">
+                </div>
+                <button onclick="calculateDenominations()" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 transform hover:scale-105">
+                    Calculate Breakdowns
+                </button>
+            </div>
+
+            <!-- Primary (Greedy) Results -->
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-indigo-700 border-b pb-2 mb-3">1. Greedy Breakdown (Minimum Notes)</h3>
+                <div id="greedyResultsContainer" class="p-4 border border-indigo-200 bg-white rounded-lg min-h-[100px] flex flex-col justify-center">
+                    <p id="greedyResultsText" class="text-lg font-medium text-gray-700 mb-3">Click 'Calculate Breakdowns' to see the minimum notes required.</p>
+                    <div id="greedyResultsVisual" class="flex flex-wrap items-center">
+                        <!-- Visual note representations for greedy method -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Results -->
+            <div>
+                <h3 class="text-xl font-bold text-indigo-700 border-b pb-2 mb-3">2. Alternative Breakdowns (Up to 15 Ways)</h3>
+                <div id="alternativeResultsContainer" class="p-4 border border-indigo-200 bg-white rounded-lg min-h-[50px]">
+                    <p id="alternativeResultsCount" class="text-base text-gray-700 mb-2">Searching for alternative combinations...</p>
+                    <div id="alternativeResultsList" class="space-y-4">
+                        <!-- Alternative combinations will be listed here -->
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+        <!-- END DENOMINATION BREAKDOWN CALCULATOR -->
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center mb-8 bg-white rounded-xl shadow-lg p-1">
+            <button id="tab-notes" class="flex-1 py-3 px-4 text-center font-bold text-lg rounded-xl transition-all duration-300" onclick="switchTab('notes')">
+                Banknotes (රු)
+            </button>
+            <button id="tab-coins" class="flex-1 py-3 px-4 text-center font-bold text-lg rounded-xl transition-all duration-300" onclick="switchTab('coins')">
+                Coins (රු)
+            </button>
+        </div>
+
+        <!-- Notes Section -->
+        <div id="section-notes" class="space-y-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Banknotes (11th Series) - Detailed Visual Guide</h2>
+
+            <!-- The content for these divs will be populated by JavaScript using SVGs -->
+            <div id="note-5000-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#e7c050]"></div>
+            <div id="note-1000-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#10b981]"></div>
+            <div id="note-500-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#8b5cf6]"></div>
+            <div id="note-100-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#fb923c]"></div>
+            <div id="note-50-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#3b82f6]"></div>
+            <div id="note-20-card" class="currency-card p-6 bg-white rounded-xl shadow-md mx-auto border-4 border-[#b91c1c]"></div>
+
+        </div>
+
+        <!-- Coins Section (Hidden by default) -->
+        <div id="section-coins" class="space-y-6 hidden">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Coins (2017/2020 Series)</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Rs. 20 Coin -->
+                <div class="currency-card p-6 bg-white rounded-xl shadow-md border-2 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-3xl font-black text-gray-800">රු 20</span>
+                        <!-- Visual representation of the 7-lobed shape -->
+                        <div class="w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center text-xs text-white font-bold" style="clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%);">
+                            7-LOBED
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">**Shape:** Seven-lobed.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Visual:** CBSL Head Office Building on the front.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Metal:** Nickel Plated Steel / Aluminium Bronze.</p>
+                </div>
+
+                <!-- Rs. 10 Coin -->
+                <div class="currency-card p-6 bg-white rounded-xl shadow-md border-2 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-3xl font-black text-gray-800">රු 10</span>
+                        <!-- Visual representation of the 11-lobed shape -->
+                        <div class="w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center text-xs text-white font-bold" style="clip-path: polygon(50% 0%, 75% 5%, 95% 20%, 100% 50%, 95% 80%, 75% 95%, 50% 100%, 25% 95%, 5% 80%, 0% 50%, 5% 20%, 25% 5%);">
+                            11-LOBED
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">**Shape:** Eleven-lobed (Undulating edge).</p>
+                    <p class="text-sm text-gray-600 mt-1">**Visual:** Armorial Ensign of Sri Lanka.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Size:** Largest diameter (26.4 mm) of the current stainless steel coins.</p>
+                </div>
+
+                <!-- Rs. 5 Coin -->
+                <div class="currency-card p-6 bg-white rounded-xl shadow-md border-2 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-3xl font-black text-gray-800">රු 5</span>
+                        <div class="w-16 h-16 border-2 border-gray-600 rounded-full flex items-center justify-center text-xs text-gray-700 font-bold">
+                            ROUND
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">**Shape:** Round with Milled Edge (regular indentations).</p>
+                    <p class="text-sm text-gray-600 mt-1">**Visual:** Armorial Ensign of Sri Lanka.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Material:** Stainless Steel. Thickness: 1.8mm.</p>
+                </div>
+
+                <!-- Rs. 2 Coin -->
+                <div class="currency-card p-6 bg-white rounded-xl shadow-md border-2 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-3xl font-black text-gray-800">රු 2</span>
+                        <div class="w-16 h-16 border-2 border-gray-600 rounded-full flex items-center justify-center text-xs text-gray-700 font-bold">
+                            ROUND
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">**Shape:** Round with Notched Edge.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Visual:** Armorial Ensign of Sri Lanka.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Size:** 22.0 mm diameter.</p>
+                </div>
+
+                <!-- Rs. 1 Coin -->
+                <div class="currency-card p-6 bg-white rounded-xl shadow-md border-2 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-3xl font-black text-gray-800">රු 1</span>
+                        <div class="w-16 h-16 border-2 border-gray-600 rounded-full flex items-center justify-center text-xs text-gray-700 font-bold">
+                            ROUND
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">**Shape:** Round with Intermitted Milled Edge.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Visual:** Armorial Ensign of Sri Lanka.</p>
+                    <p class="text-sm text-gray-600 mt-1">**Size:** Smallest diameter (20.0 mm).</p>
+                </div>
+            </div>
+            <p class="text-center text-gray-500 pt-4">Note: Cents (25c, 50c) are generally not in circulation.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Set initial tab state
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('notes');
+            renderStaticNotes();
+            // Run calculation once on load with the default value
+            calculateDenominations();
+        });
+        
+        // Define banknote properties including color codes and size (for realistic placeholders)
+        const DENOMINATIONS = [
+            { value: 5000, name: '5000', color: 'e7c050', width: 153, tailwindClass: 'w-note-5000', blindDots: 6, info: 'Weheragala Dam & Sri Lankan Yellow Eared Bulbul' },
+            { value: 1000, name: '1000', color: '10b981', width: 148, tailwindClass: 'w-note-1000', blindDots: 5, info: 'Ramboda Tunnel & Sri Lankan Hanging Parrot' },
+            { value: 500, name: '500', color: '8b5cf6', width: 143, tailwindClass: 'w-note-500', blindDots: 4, info: 'WTC Towers & Ancient Lankathilake Viharaya' },
+            { value: 100, name: '100', color: 'fb923c', width: 138, tailwindClass: 'w-note-100', blindDots: 3, info: 'Norochcholai Power Plant & Orange Billed Babbler' },
+            { value: 50, name: '50', color: '3b82f6', width: 133, tailwindClass: 'w-note-50', blindDots: 2, info: 'Manampitiya Bridge & Dull Blue Flycatcher' },
+            { value: 20, name: '20', color: 'b91c1c', width: 128, tailwindClass: 'w-note-20', blindDots: 1, info: 'Port of Colombo & Serendib Scops Owl' }
+        ];
+        
+        const MAX_ALTERNATIVES = 15;
+
+        /**
+         * Generates a stylized SVG for a banknote to simulate a 'real' look.
+         * The design uses geometric patterns, gradients, and lines to mimic security features.
+         */
+        function createNoteSvg(value, color, width) {
+            const height = 90;
+            const darkColor = '#' + color.substring(0, 4) + '3a'; // Darker shade of the note color
+            const lightColor = '#' + color + 'f0'; // Lighter, transparent shade
+
+            return `
+                <svg viewBox="0 0 400 ${height}" xmlns="http://www.w3.org/2000/svg" class="rounded-lg shadow-inner">
+                    <defs>
+                        <linearGradient id="mainGradient-${value}" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#${color};stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:${darkColor};stop-opacity:1" />
+                        </linearGradient>
+                        <pattern id="pattern-${value}" patternUnits="userSpaceOnUse" width="10" height="10">
+                            <path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="${lightColor}" stroke-width="0.8" opacity="0.4"/>
+                        </pattern>
+                    </defs>
+                    
+                    <!-- Main Background with Gradient -->
+                    <rect width="400" height="${height}" rx="8" fill="url(#mainGradient-${value})" />
+                    
+                    <!-- Fine Line Guilloche Pattern -->
+                    <rect width="400" height="${height}" rx="8" fill="url(#pattern-${value})" />
+                    
+                    <!-- Simulated Security Strip/Hologram (Vertical Gold Stripe) -->
+                    <rect x="340" y="0" width="30" height="${height}" fill="url(#mainGradient-${value})" opacity="0.6"/>
+                    <rect x="340" y="0" width="15" height="${height}" fill="#FFD700" opacity="0.3" transform="skewX(-10)"/>
+
+                    <!-- Watermark Area (Simulated by a lighter circle) -->
+                    <circle cx="50" cy="${height / 2}" r="30" fill="white" opacity="0.2"/>
+                    
+                    <!-- Denomination Text -->
+                    <text x="20" y="${height / 2 + 15}" font-family="Inter, sans-serif" font-weight="900" font-size="60" fill="white" opacity="0.9" text-anchor="start">
+                        ${value.toLocaleString()}
+                    </text>
+                    <text x="365" y="${height - 10}" font-family="Inter, sans-serif" font-weight="900" font-size="20" fill="white" opacity="0.8" text-anchor="end">
+                        රු
+                    </text>
+                </svg>
+            `;
+        }
+
+
+        /**
+         * Renders the static, detailed SVG notes into the respective card containers.
+         */
+        function renderStaticNotes() {
+            DENOMINATIONS.forEach(note => {
+                const cardElement = document.getElementById(`note-${note.value}-card`);
+                if (!cardElement) return;
+
+                // Add the specific width class to the card for size differentiation
+                cardElement.classList.add(note.tailwindClass);
+
+                // Create the Blind Recognition Dots HTML
+                const blindDotsHtml = Array(note.blindDots).fill('<div class="blind-dot"></div>').join('');
+                
+                // Set the inner HTML for the card, including the SVG
+                cardElement.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-4xl font-black text-gray-900">රු ${note.name}</span>
+                        <div class="flex flex-col items-end">
+                            <div class="flex justify-end">${blindDotsHtml}</div>
+                            <small class="text-gray-500 mt-1">(${note.blindDots} Tactile Dots)</small>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="md:w-1/3">
+                            <div class="note-svg-container rounded-lg shadow-xl mb-2">
+                                ${createNoteSvg(note.value, note.color, note.width)}
+                            </div>
+                            <p class="text-sm text-gray-500 mt-2">Size: ${note.width}mm x 67mm</p>
+                        </div>
+                        <div class="md:w-2/3">
+                            <p class="font-semibold mb-1 text-gray-700">Key Visuals (Theme):</p>
+                            <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
+                                <li>${note.info}</li>
+                                <li>All notes feature a security thread and Endemic Birds.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        /**
+         * Generates the HTML for a single breakdown combination using small colored boxes.
+         */
+        function renderBreakdown(breakdownArray, index, isGreedy = false) {
+            let totalNotes = 0;
+            let breakdownText = [];
+            let visualHtml = '';
+            
+            // Format breakdown text and count total notes
+            for (const item of breakdownArray) {
+                if (item.count > 0) {
+                    breakdownText.push(`${item.count} x Rs. ${item.name}`);
+                    totalNotes += item.count;
+                }
+            }
+
+            // Generate visual representation using small styled boxes
+            breakdownArray.forEach(item => {
+                const boxClass = `box-${item.value}`;
+                for (let i = 0; i < item.count; i++) {
+                    visualHtml += `
+                        <div class="small-note-box ${boxClass}" title="Rs. ${item.name} Note">${item.name}</div>
+                    `;
+                }
+            });
+
+            if (isGreedy) {
+                // For the Greedy result
+                document.getElementById('greedyResultsText').textContent = `Rs. ${breakdownArray.totalAmount} can be broken down using ${totalNotes} notes: ${breakdownText.join(', ')}.`;
+                document.getElementById('greedyResultsVisual').innerHTML = visualHtml;
+            } else {
+                // For Alternative results
+                return `
+                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="font-semibold text-gray-800 mb-2">Combination #${index} (${totalNotes} Notes)</p>
+                        <p class="text-sm text-gray-600 mb-2">${breakdownText.join(', ')}</p>
+                        <div class="flex flex-wrap items-center max-w-full overflow-x-auto py-1">
+                            ${visualHtml}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+
+        /**
+         * Main function to calculate all denominations.
+         */
+        function calculateDenominations() {
+            const inputElement = document.getElementById('lkrAmount');
+            const resultsTextElement = document.getElementById('greedyResultsText');
+            const resultsVisualElement = document.getElementById('greedyResultsVisual');
+            const alternativeListElement = document.getElementById('alternativeResultsList');
+            const alternativeCountElement = document.getElementById('alternativeResultsCount');
+
+            let amount = parseInt(inputElement.value, 10);
+            
+            // Clear previous results
+            resultsTextElement.textContent = "Processing...";
+            resultsVisualElement.innerHTML = '';
+            alternativeListElement.innerHTML = '';
+            alternativeCountElement.textContent = "Searching for alternative combinations...";
+
+
+            // Input validation
+            if (isNaN(amount) || amount <= 0 || amount % 20 !== 0) {
+                resultsTextElement.textContent = "Please enter a valid amount (must be positive and divisible by 20, the smallest note).";
+                alternativeCountElement.textContent = "No valid alternatives could be calculated.";
+                return;
+            }
+            
+            const denominations = DENOMINATIONS.map(d => d.value);
+            
+            // --- 1. Greedy Breakdown (Minimum Notes) ---
+            let remainingAmount = amount;
+            const greedyBreakdown = [];
+            
+            for (const note of DENOMINATIONS) {
+                if (remainingAmount >= note.value) {
+                    const count = Math.floor(remainingAmount / note.value);
+                    if (count > 0) {
+                        greedyBreakdown.push({ ...note, count: count });
+                        remainingAmount -= count * note.value;
+                    }
+                }
+            }
+            greedyBreakdown.totalAmount = amount;
+            renderBreakdown(greedyBreakdown, 0, true);
+            
+            // --- 2. Alternative Breakdowns (Deep Search) ---
+            const allCombinations = [];
+            
+            // Recursive function to find combinations
+            function findCombinations(targetAmount, currentCombination, currentDenominationIndex) {
+                if (allCombinations.length >= MAX_ALTERNATIVES) {
+                    return; // Stop if max count reached
+                }
+                
+                // Base case: Target reached
+                if (targetAmount === 0) {
+                    // Filter out combinations with all zero counts
+                    const validCombination = DENOMINATIONS.map((note, i) => ({
+                        ...note,
+                        count: currentCombination[note.value] || 0
+                    })).filter(item => item.count > 0);
+
+                    // Check if this combination is unique (based on counts, ignoring order)
+                    // We generate a key to ensure we only count unique sets of notes (e.g., 2x50 is the same as 1x100)
+                    const comboKey = validCombination.map(item => `${item.name}:${item.count}`).sort().join('|');
+                    if (comboKey && !allCombinations.some(c => c.key === comboKey)) {
+                         allCombinations.push({ key: comboKey, combo: validCombination });
+                    }
+                    return;
+                }
+
+                // Base case: Target is negative or no more denominations
+                if (targetAmount < 0 || currentDenominationIndex >= denominations.length) {
+                    return;
+                }
+
+                const noteValue = denominations[currentDenominationIndex];
+                
+                // Max number of notes of this denomination we can use
+                const maxCount = Math.floor(targetAmount / noteValue);
+
+                // Explore possibilities: use 0, 1, 2, ..., maxCount of the current note
+                for (let count = maxCount; count >= 0; count--) {
+                    const newAmount = targetAmount - (count * noteValue);
+                    const newCombination = { ...currentCombination };
+                    if (count > 0) {
+                         newCombination[noteValue] = count;
+                    }
+
+                    // Recursive call to the next smaller denomination
+                    findCombinations(newAmount, newCombination, currentDenominationIndex + 1);
+                }
+            }
+            
+            findCombinations(amount, {}, 0);
+            
+            // Filter and render alternative results (excluding the greedy breakdown if it was found)
+            const alternativesToRender = allCombinations.slice(0, MAX_ALTERNATIVES);
+            
+            if (alternativesToRender.length > 0) {
+                alternativeCountElement.textContent = `Found ${alternativesToRender.length} distinct combination(s):`;
+                let alternativeHtml = '';
+                alternativesToRender.forEach((comboData, index) => {
+                    comboData.combo.totalAmount = amount;
+                    alternativeHtml += renderBreakdown(comboData.combo, index + 1, false);
+                });
+                alternativeListElement.innerHTML = alternativeHtml;
+            } else if (amount % 20 === 0) {
+                 alternativeCountElement.textContent = "No distinct alternative combinations were found (the greedy breakdown is the only or most efficient option).";
+            }
+        }
+
+
+        /**
+         * Switches the view between banknotes and coins.
+         */
+        function switchTab(activeTab) {
+            const notesSection = document.getElementById('section-notes');
+            const coinsSection = document.getElementById('section-coins');
+            const notesTab = document.getElementById('tab-notes');
+            const coinsTab = document.getElementById('tab-coins');
+
+            // Logic to hide/show sections and style the active tab button
+            if (activeTab === 'notes') {
+                notesSection.classList.remove('hidden');
+                coinsSection.classList.add('hidden');
+                notesTab.classList.add('bg-gray-100', 'text-indigo-600');
+                notesTab.classList.remove('text-gray-500');
+                coinsTab.classList.remove('bg-gray-100', 'text-indigo-600');
+                coinsTab.classList.add('text-gray-500');
+            } else if (activeTab === 'coins') {
+                notesSection.classList.add('hidden');
+                coinsSection.classList.remove('hidden');
+                coinsTab.classList.add('bg-gray-100', 'text-indigo-600');
+                coinsTab.classList.remove('text-gray-500');
+                notesTab.classList.remove('bg-gray-100', 'text-indigo-600');
+                notesTab.classList.add('text-gray-500');
+            }
+        }
+
+    </script>
+</body>
+</html>
